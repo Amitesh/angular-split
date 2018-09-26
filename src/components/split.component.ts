@@ -553,56 +553,55 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         const devicePixelRatio = window.devicePixelRatio || 1;
         let offsetPixel = (this.direction === 'horizontal') ? (start.x - end.x) : (start.y - end.y);
         offsetPixel = offsetPixel / devicePixelRatio;
-        
-        if(this.dir === 'rtl') {
+
+        if (this.dir === 'rtl') {
             offsetPixel = -offsetPixel;
         }
 
         let newSizePixelA = this.dragStartValues.sizePixelA - offsetPixel;
         let newSizePixelB = this.dragStartValues.sizePixelB + offsetPixel;
-        
-        if(newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
-            // WTF.. get out of here!
-            return;
-        }
-        else if(newSizePixelA < this.gutterSize) {
-            newSizePixelB += newSizePixelA;
-            newSizePixelA = 0;
-        }
-        else if(newSizePixelB < this.gutterSize) {
-            newSizePixelA += newSizePixelB;
-            newSizePixelB = 0;
-        }
 
         // ¤ AREAS SIZE PERCENT
 
-        if(newSizePixelA === 0) {
+        if (newSizePixelA === 0) {
             areaB.size += areaA.size;
             areaA.size = 0;
         }
-        else if(newSizePixelB === 0) {
+        else if (newSizePixelB === 0) {
             areaA.size += areaB.size;
             areaB.size = 0;
         }
         else {
             // NEW_PERCENT = START_PERCENT / START_PIXEL * NEW_PIXEL;
-            if(this.dragStartValues.sizePercentA === 0) {
+            if (this.dragStartValues.sizePercentA === 0) {
                 areaB.size = this.dragStartValues.sizePercentB / this.dragStartValues.sizePixelB * newSizePixelB;
                 areaA.size = this.dragStartValues.sizePercentB - areaB.size;
             }
-            else if(this.dragStartValues.sizePercentB === 0) {
+            else if (this.dragStartValues.sizePercentB === 0) {
                 areaA.size = this.dragStartValues.sizePercentA / this.dragStartValues.sizePixelA * newSizePixelA;
                 areaB.size = this.dragStartValues.sizePercentA - areaA.size;
             }
             else {
                 areaA.size = this.dragStartValues.sizePercentA / this.dragStartValues.sizePixelA * newSizePixelA;
                 areaB.size = (this.dragStartValues.sizePercentA + this.dragStartValues.sizePercentB) - areaA.size;
+                
+                // Calculate the area sizes as per the min-width set on it.
+                if (areaA.size <= areaA.comp.minSize) {
+                    areaA.size = areaA.comp.minSize;
+                    areaB.size = (this.dragStartValues.sizePercentA + this.dragStartValues.sizePercentB) - areaA.size;
+                }
+                
+                if (areaB.size <= areaB.comp.minSize) {
+                    areaB.size = areaB.comp.minSize;
+                    areaA.size = (this.dragStartValues.sizePercentA + this.dragStartValues.sizePercentB) - areaB.size;
+                }
             }
         }
 
         this.refreshStyleSizes();
         this.notify('progress');
     }
+
 
     private stopDragging(): void {
         if(this.isDragging === false && this.draggingWithoutMove === false) {
